@@ -33,12 +33,15 @@ export default class VOXLoader extends Loader {
         file.version = file.readUInt32();
         file.readDefaultPalette();
 
-        while (file.head < data.length) {
+        while (file.head < file.buffer.length) {
             file.readNextChunk();
         }
 
         delete file.head;
         delete file.buffer;
+
+        console.log(file);
+
 
         // === build the mesh ===
 
@@ -178,6 +181,6 @@ export default class VOXLoader extends Loader {
             }
         }
 
-        return new VOXMesh(geometry, materials, lights);
+        return [new VOXMesh(geometry, materials, lights)];
     }
 }

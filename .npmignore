@@ -4,6 +4,7 @@ tests
 
 .eslint.config.js
 jest.config.js
+vite.config.js
 .gitignore
 .npmignore
 README.md
