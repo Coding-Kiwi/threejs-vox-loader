@@ -1,7 +1,8 @@
 import { unpack, unpackString } from 'byte-data';
 import { Color, SRGBColorSpace } from 'three';
+import ModelObject from './ModelObject';
 
-const U_INT_32 = { bits: 32, be: false, signed: false, fp: false };
+const INT_32 = { bits: 32, be: false, signed: true, fp: false };
 
 //https://paulbourke.net/dataformats/vox/
 //https://github.com/ephtracy/voxel-model/blob/master/MagicaVoxel-file-format-vox.txt
@@ -47,7 +48,10 @@ export default class VOXFile {
         this.head = 0;
 
         this.materials = new Map();
-        this.voxels = new Map();
+        this.objects = [];
+        this.currentObject = null;
+
+        this.nodes = {};
     }
 
     readChar() {
@@ -57,8 +61,8 @@ export default class VOXFile {
         return str;
     }
 
-    readUInt32() {
-        let value = unpack(this.buffer, U_INT_32, this.head);
+    readInt32() {
+        let value = unpack(this.buffer, INT_32, this.head);
         this.head += 4;
         return value;
     }
@@ -70,7 +74,7 @@ export default class VOXFile {
     }
 
     readString() {
-        let size = this.readUInt32();
+        let size = this.readInt32();
         let str = '';
         str = unpackString(this.buffer, this.head, this.head + size);
         this.head += size;
@@ -79,7 +83,7 @@ export default class VOXFile {
 
     readDict() {
         let dict = {};
-        let numPairs = this.readUInt32();
+        let numPairs = this.readInt32();
 
         for (let i = 0; i < numPairs; i++) {
             let key = this.readString();
@@ -92,10 +96,13 @@ export default class VOXFile {
 
     readNextChunk() {
         let chunk_id = this.readChar();
-        let chunk_bytes = this.readUInt32();
-        let child_chunk_bytes = this.readUInt32();
+        let chunk_bytes = this.readInt32();
+        let child_chunk_bytes = this.readInt32();
 
         let current_head = this.head;
+
+        console.log(chunk_id);
+
 
         let reader = this["read" + chunk_id];
 
@@ -111,26 +118,30 @@ export default class VOXFile {
 
     readPACK() {
         this.pack = {
-            numModels: this.readUInt32()
+            numModels: this.readInt32()
         }
     }
 
     readSIZE() {
-        this.size = {
-            x: this.readUInt32(),
-            y: this.readUInt32(),
-            z: this.readUInt32()
-        }
+        let size = {
+            x: this.readInt32(),
+            y: this.readInt32(),
+            z: this.readInt32()
+        };
+
+        this.currentObject = new ModelObject(size);
+        this.objects.push(this.currentObject)
     }
 
     readXYZI() {
-        let numVoxels = this.readUInt32();
+        let numVoxels = this.readInt32();
 
-        const offset_y = this.size.x;
-        const offset_z = this.size.x * this.size.y;
+        const obj = this.currentObject;
+        const offset_y = obj.size.x;
+        const offset_z = obj.size.x * obj.size.y;
 
-        this.voxels = new Array(this.size.x * this.size.y * this.size.z);
-        this.voxels.fill(null);
+        obj.voxels = new Array(obj.size.x * obj.size.y * obj.size.z);
+        obj.voxels.fill(null);
 
         for (let i = 0; i < numVoxels; i++) {
             let x = this.readByte();
@@ -138,7 +149,7 @@ export default class VOXFile {
             let z = this.readByte();
             const index = x + (y * offset_y) + (z * offset_z);
 
-            this.voxels[index] = this.readByte();
+            obj.voxels[index] = this.readByte();
         }
     }
 
@@ -167,11 +178,76 @@ export default class VOXFile {
     }
 
     readMATL() {
-        let material_id = this.readUInt32();
+        let material_id = this.readInt32();
         this.materials.set(material_id, {
             id: material_id,
             ...this.readDict()
         });
+    }
+
+    readnTRN() {
+        let node_id = this.readInt32();
+        let attrs = this.readDict();
+        let child_node_id = this.readInt32();
+        let reserved_id = this.readInt32();
+        let layer_id = this.readInt32();
+        let frame_count = this.readInt32();
+
+        let frames = [];
+
+        for (let i = 0; i < frame_count; i++) {
+            frames.push(this.readDict());
+        }
+
+        this.nodes[node_id] = {
+            id: node_id,
+            type: "T",
+            attrs,
+            child_node_ids: [child_node_id],
+            layer_id,
+            frames
+        };
+
+    }
+
+    readnGRP() {
+        let node_id = this.readInt32();
+        let attrs = this.readDict();
+        let child_node_count = this.readInt32();
+        let child_node_ids = [];
+
+        for (let i = 0; i < child_node_count; i++) {
+            child_node_ids.push(this.readInt32());
+        }
+
+        this.nodes[node_id] = {
+            id: node_id,
+            type: "G",
+            attrs,
+            child_node_ids
+        };
+    }
+
+    readnSHP() {
+        let node_id = this.readInt32();
+        let attrs = this.readDict();
+        let model_count = this.readInt32();
+        let models = [];
+
+        for (let i = 0; i < model_count; i++) {
+            let model_id = this.readInt32();
+            models.push({
+                id: model_id,
+                ...this.readDict()
+            });
+        }
+
+        this.nodes[node_id] = {
+            id: node_id,
+            type: "S",
+            attrs,
+            models
+        };
     }
 
 
@@ -187,14 +263,6 @@ export default class VOXFile {
         _color.setRGB(color.r / 255, color.g / 255, color.b / 255, SRGBColorSpace);
 
         return _color;
-    }
-
-    getVoxel(x, y, z) {
-        const offset_y = this.size.x;
-        const offset_z = this.size.x * this.size.y;
-
-        const index = x + (y * offset_y) + (z * offset_z);
-        return this.voxels[index];
     }
 
     getMaterial(colorIndex) {

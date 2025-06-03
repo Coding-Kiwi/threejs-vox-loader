@@ -5,10 +5,12 @@ import { VOXLoader } from '../src/index.js';
 
 import cubeUrl from "../tests/fixtures/cube.vox";
 import carsUrl from "../tests/fixtures/cars.vox";
+import twocubesUrl from "../tests/fixtures/twocubes.vox";
 
 const MODELS = {
     cube: cubeUrl,
-    cars: carsUrl
+    cars: carsUrl,
+    twocubes: twocubesUrl,
 }
 
 const scene = new THREE.Scene();
