@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { VOXLoader } from '../src/index.js';
+
+
 import cubeUrl from "../tests/fixtures/cube.vox";
+import carsUrl from "../tests/fixtures/cars.vox";
+
+const MODELS = {
+    cube: cubeUrl,
+    cars: carsUrl
+}
 
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer();
@@ -19,40 +27,50 @@ camera.lookAt(0, 0, 0);
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-
 const loader = new VOXLoader();
-loader.load(cubeUrl, function (meshes) {
-    const group = new THREE.Group();
+let currentModel = null;
 
-    for (let i = 0; i < meshes.length; i++) {
-        const m = meshes[i];
+function modelChange() {
+    let url = MODELS[document.getElementById("modelSelect").value];
 
-        let size = 1;
-        m.scale.setScalar(size);
-        m.castShadow = true;
-        m.receiveShadow = true;
+    loader.load(url, function (meshes) {
+        if (currentModel) scene.remove(currentModel);
 
-        group.add(m);
+        currentModel = new THREE.Group();
 
-        const box3 = new THREE.Box3().setFromObject(m)
-        const vector = new THREE.Vector3();
-        box3.getCenter(vector);
-        m.position.set(-vector.x, -vector.y, -vector.z);
+        for (let i = 0; i < meshes.length; i++) {
+            const m = meshes[i];
 
-        m.lights.forEach(l => {
-            l.position.set(
-                l.position.x * size,
-                l.position.y * size,
-                l.position.z * size,
-            );
-            group.add(l);
-        })
+            let size = 1;
+            m.scale.setScalar(size);
+            m.castShadow = true;
+            m.receiveShadow = true;
 
-        scene.add(m);
-    }
+            currentModel.add(m);
 
-    renderer.render(scene, camera);
-});
+            const box3 = new THREE.Box3().setFromObject(m)
+            const vector = new THREE.Vector3();
+            box3.getCenter(vector);
+            m.position.set(-vector.x, -vector.y, -vector.z);
+
+            m.lights.forEach(l => {
+                l.position.set(
+                    l.position.x * size,
+                    l.position.y * size,
+                    l.position.z * size,
+                );
+                currentModel.add(l);
+            })
+        }
+
+        scene.add(currentModel);
+
+        renderer.render(scene, camera);
+    });
+}
+
+document.getElementById("modelSelect").addEventListener("change", modelChange)
+modelChange();
 
 const hemiLight = new THREE.HemisphereLight(0xcccccc, 0x444444, 3);
 scene.add(hemiLight);
