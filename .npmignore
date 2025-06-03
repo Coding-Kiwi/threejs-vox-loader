@@ -1,0 +1,9 @@
+examples
+node_modules
+tests
+
+.eslint.config.js
+jest.config.js
+.gitignore
+.npmignore
+README.md
