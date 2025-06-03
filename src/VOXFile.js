@@ -101,9 +101,6 @@ export default class VOXFile {
 
         let current_head = this.head;
 
-        console.log(chunk_id);
-
-
         let reader = this["read" + chunk_id];
 
         if (typeof reader === "function") {

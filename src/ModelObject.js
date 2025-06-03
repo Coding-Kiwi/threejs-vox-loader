@@ -6,10 +6,7 @@ export default class ModelObject {
     }
 
     getVoxel(x, y, z) {
-        const offset_y = this.size.x;
-        const offset_z = this.size.x * this.size.y;
-
-        const index = x + (y * offset_y) + (z * offset_z);
-        return this.voxels[index];
+        if (x < 0 || y < 0 || z < 0 || x >= this.size.x || y >= this.size.y || z >= this.size.z) return null;
+        return this.voxels[x + y * this.size.x + z * this.size.x * this.size.y];
     }
 }

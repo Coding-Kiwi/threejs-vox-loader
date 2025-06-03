@@ -15,8 +15,8 @@ const MODELS = {
 
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer();
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement);
@@ -45,8 +45,8 @@ function modelChange() {
 
             let size = 1;
             m.scale.setScalar(size);
-            m.castShadow = true;
-            m.receiveShadow = true;
+            // m.castShadow = true;
+            // m.receiveShadow = true;
 
             currentModel.add(m);
 

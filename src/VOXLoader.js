@@ -72,8 +72,6 @@ export default class VOXLoader extends Loader {
             }
         }
 
-        console.log(file);
-
 
         // === build the meshes ===
 
@@ -187,7 +185,8 @@ export default class VOXLoader extends Loader {
                     const color = file.getThreeColor(m);
 
                     const opts = {
-                        flatShading: true
+                        flatShading: true,
+                        // wireframe: true
                     };
 
                     if (mat._type === '_emit') {
@@ -202,6 +201,12 @@ export default class VOXLoader extends Loader {
                     if (typeof mat._metal !== "undefined") {
                         opts.metalness = parseFloat(mat._metal);
                     }
+
+                    if (typeof mat._alpha !== "undefined") {
+                        opts.transparent = true;
+                        opts.opacity = mat._alpha;
+                    }
+
 
                     if (hasColors) opts.color = color;
 
