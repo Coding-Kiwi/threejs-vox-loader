@@ -1,0 +1,36 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: install
+  image: node
+  commands:
+  - npm ci
+
+- name: test
+  image: node
+  depends_on:
+  - install
+  commands:
+  - npm run test
+
+- name: lint
+  image: node
+  depends_on:
+  - install
+  commands:
+  - npm run lint
+
+#- name: npm
+#  image: plugins/npm
+#  settings:
+#    username:
+#      from_secret: npm_username
+#    password:
+#      from_secret: npm_password
+#    email:
+#      from_secret: npm_email
+#  when:
+#    event:
+#    - tag
