@@ -1,14 +1,37 @@
 import {
-    BufferGeometry,
+    Box3,
     FileLoader,
-    Float32BufferAttribute,
+    Group,
     Loader,
-    MeshStandardMaterial,
-    PointLight
+    Matrix4,
+    Vector3
 } from 'three';
 
 import VOXFile from "./VOXFile.js";
-import VOXMesh from './VOXMesh.js';
+import { optimizedMesh } from './optimized.js';
+
+function unpackRotation(byte) {
+    const row0Index = (byte >> 0) & 0b11;
+    const row1Index = (byte >> 2) & 0b11;
+    const row0Sign = (byte >> 4) & 0b1;
+    const row1Sign = (byte >> 5) & 0b1;
+    const row2Sign = (byte >> 6) & 0b1;
+
+    const usedIndices = [row0Index, row1Index];
+    const row2Index = [0, 1, 2].find(i => !usedIndices.includes(i));
+
+    const R = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+    ];
+
+    R[0][row0Index] = row0Sign ? -1 : 1;
+    R[1][row1Index] = row1Sign ? -1 : 1;
+    R[2][row2Index] = row2Sign ? -1 : 1;
+
+    return R;
+}
 
 export default class VOXLoader extends Loader {
     constructor(manager) {
@@ -68,6 +91,26 @@ export default class VOXLoader extends Loader {
                         y: pos[1],
                         z: pos[2],
                     };
+
+                    let rot = parentT.frames[0]._r;
+                    if (rot) {
+                        rot = unpackRotation(rot);
+
+                        // Transpose the rot 3x3 row-major into column-major
+                        const m11 = rot[0][0], m12 = rot[0][1], m13 = rot[0][2];
+                        const m21 = rot[1][0], m22 = rot[1][1], m23 = rot[1][2];
+                        const m31 = rot[2][0], m32 = rot[2][1], m33 = rot[2][2];
+
+                        const matrix = new Matrix4();
+                        matrix.set(
+                            m13, m23, m33, 0,
+                            m11, m21, m31, 0,
+                            m12, m22, m32, 0,
+                            0, 0, 0, 1
+                        );
+
+                        file.objects[m].rotation = matrix;
+                    }
                 })
             }
         }
@@ -75,156 +118,23 @@ export default class VOXLoader extends Loader {
 
         // === build the meshes ===
 
-        // file.objects = [file.objects[1]];
+        const group = new Group();
 
-        return file.objects.map(obj => {
-            const sizeX = obj.size.x;
-            const sizeY = obj.size.y;
-            const sizeZ = obj.size.z;
-            const halfX = sizeX / 2;
-            const halfY = sizeY / 2;
-            const halfZ = sizeZ / 2;
+        file.objects.forEach(obj => {
+            let mesh = optimizedMesh(file, obj);
+            group.add(mesh);
+        });
 
-            const lights = [];
-            const vertices = [];
-            const colors = [];
-            const geometry = new BufferGeometry();
+        const box3 = new Box3().setFromObject(group);
+        const vector = new Vector3();
+        box3.getCenter(vector);
 
-            const offset_y = sizeX;
-            const offset_z = sizeX * sizeY;
-
-            let startGroup = 0;
-            let groupMaterial = null;
-            let usedMaterials = [];
-            let hasColors = false;
-
-            const px = [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0]; //positive x face (right)
-            const py = [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1]; //positive y face (top)
-            const pz = [0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1]; //positive z face (front)
-            const nx = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1]; //negative x face (left)
-            const ny = [0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0]; //negative y face (bottom)
-            const nz = [0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0]; //negative z face (back)
-
-            function add(face, x, y, z, color, material) {
-                if (material && groupMaterial !== material.id) {
-                    if (vertices.length > startGroup) {
-                        let index = usedMaterials.indexOf(groupMaterial);
-                        if (index === -1) {
-                            usedMaterials.push(groupMaterial);
-                            index = usedMaterials.length - 1;
-                        }
-                        geometry.addGroup(startGroup / 3, (vertices.length - startGroup) / 3, index);
-                    }
-                    startGroup = vertices.length;
-                    groupMaterial = material.id;
-                }
-
-                x -= halfX; // center model in X
-                y -= halfZ; // center model in Y (note: Y/Z swap explained below)
-                z += halfY; // offset Z forward (voxel space to Three.js space)
-
-                for (let i = 0; i < 18; i += 3) {
-                    vertices.push(face[i + 0] + x, face[i + 1] + y, face[i + 2] + z);
-                    colors.push(color.r, color.g, color.b);
-                }
-            }
-
-            obj.voxels.forEach((colorIndex, index) => {
-                if (colorIndex === null) return;
-
-                const x = index % offset_y;
-                const y = Math.floor(index / offset_y) % sizeY;
-                const z = Math.floor(index / offset_z);
-
-                const color = file.getThreeColor(colorIndex);
-                if (!hasColors && (color.r > 0 || color.g > 0 || color.b > 0)) hasColors = true;
-
-                const material = file.getMaterial(colorIndex);
-
-                if (obj.voxels[index + 1] === null || x === sizeX - 1) add(px, x, z, - y, color, material);
-                if (obj.voxels[index - 1] === null || x === 0) add(nx, x, z, - y, color, material);
-                if (obj.voxels[index + offset_y] === null || y === sizeY - 1) add(ny, x, z, - y, color, material);
-                if (obj.voxels[index - offset_y] === null || y === 0) add(py, x, z, - y, color, material);
-                if (obj.voxels[index + offset_z] === null || z === sizeZ - 1) add(pz, x, z, - y, color, material);
-                if (obj.voxels[index - offset_z] === null || z === 0) add(nz, x, z, - y, color, material);
-
-                const isEmissive = material?._type === "_emit";
-
-                if (isEmissive) {
-                    let light = new PointLight(color, 0.5, 0.1, 1);
-                    light.castShadow = true;
-
-                    light.position.set(
-                        x + 0.5 - halfX,
-                        z + 0.5 - halfY,
-                        y - 0.5 + halfZ,
-                    );
-
-                    lights.push(light);
-                }
-            });
-
-            // Final group
-            if (vertices.length > startGroup) {
-                let index = usedMaterials.indexOf(groupMaterial);
-                if (index === -1) {
-                    usedMaterials.push(groupMaterial);
-                    index = usedMaterials.length - 1;
-                }
-                geometry.addGroup(startGroup / 3, (vertices.length - startGroup) / 3, index);
-            }
-
-            geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-            geometry.computeVertexNormals();
-
-            let materials = [];
-
-            if (usedMaterials.length) {
-                materials = usedMaterials.map(m => {
-                    const mat = file.getMaterial(m);
-                    const color = file.getThreeColor(m);
-
-                    const opts = {
-                        flatShading: true,
-                        // wireframe: true
-                    };
-
-                    if (mat._type === '_emit') {
-                        opts.emissive = color;
-                        opts.emissiveIntensity = 0.5;
-                    }
-
-                    if (typeof mat._rough !== "undefined") {
-                        opts.roughness = parseFloat(mat._rough);
-                    }
-
-                    if (typeof mat._metal !== "undefined") {
-                        opts.metalness = parseFloat(mat._metal);
-                    }
-
-                    if (typeof mat._alpha !== "undefined") {
-                        opts.transparent = true;
-                        opts.opacity = mat._alpha;
-                    }
-
-
-                    if (hasColors) opts.color = color;
-
-                    return new MeshStandardMaterial(opts);
-                });
-            } else {
-                materials = new MeshStandardMaterial();
-
-                if (hasColors) {
-                    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
-                    materials.vertexColors = true;
-                }
-            }
-
-            let m = new VOXMesh(geometry, materials, lights);
-            m.position.set(obj.position.x, obj.position.z, obj.position.y);
-
-            return m;
+        group.children.forEach(child => {
+            child.position.x -= vector.x;
+            child.position.y -= vector.y;
+            child.position.z -= vector.z;
         })
+
+        return [group];
     }
 }

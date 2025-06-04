@@ -97,7 +97,7 @@ export default class VOXFile {
     readNextChunk() {
         let chunk_id = this.readChar();
         let chunk_bytes = this.readInt32();
-        let child_chunk_bytes = this.readInt32();
+        this.readInt32(); //child_chunk_bytes
 
         let current_head = this.head;
 
@@ -186,7 +186,7 @@ export default class VOXFile {
         let node_id = this.readInt32();
         let attrs = this.readDict();
         let child_node_id = this.readInt32();
-        let reserved_id = this.readInt32();
+        this.readInt32(); //reserved_id
         let layer_id = this.readInt32();
         let frame_count = this.readInt32();
 
