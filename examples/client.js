@@ -42,26 +42,19 @@ camera.lookAt(0, 0, 0);
 const controls = new OrbitControls(camera, renderer.domElement);
 
 const loader = new VOXLoader();
-let currentModel = null;
+let currentVoxScene = null;
 
 function modelChange() {
     let url = MODELS[document.getElementById("modelSelect").value];
 
-    loader.load(url, function (meshes) {
-        if (currentModel) scene.remove(currentModel);
+    loader.load(url, function (voxScene) {
+        if (currentVoxScene) scene.remove(currentVoxScene);
 
-        currentModel = new THREE.Group();
+        currentVoxScene = voxScene;
+        currentVoxScene.castShadow = true;
+        currentVoxScene.receiveShadow = true;
 
-        for (let i = 0; i < meshes.length; i++) {
-            const m = meshes[i];
-
-            m.castShadow = true;
-            m.receiveShadow = true;
-
-            currentModel.add(m);
-        }
-
-        scene.add(currentModel);
+        scene.add(currentVoxScene);
     });
 }
 

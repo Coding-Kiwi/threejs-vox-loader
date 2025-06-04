@@ -1,7 +1,9 @@
 import VOXLoader from "./VOXLoader.js"
-import VOXMesh from "./VOXMesh.js"
+import VOXScene from "./VOXScene.js"
+import VOXSceneObject from "./VOXSceneObject.js"
 
 export {
     VOXLoader,
-    VOXMesh
+    VOXScene,
+    VOXSceneObject
 }

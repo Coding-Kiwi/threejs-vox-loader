@@ -1,14 +1,11 @@
 import {
-    Box3,
     FileLoader,
-    Group,
     Loader,
-    Matrix4,
-    Vector3
+    Matrix4
 } from 'three';
 
 import VOXFile from "./VOXFile.js";
-import { optimizedMesh } from './optimized.js';
+import VOXScene from './VOXScene.js';
 
 function unpackRotation(byte) {
     const row0Index = (byte >> 0) & 0b11;
@@ -115,26 +112,10 @@ export default class VOXLoader extends Loader {
             }
         }
 
+        // === build the scene ===
 
-        // === build the meshes ===
-
-        const group = new Group();
-
-        file.objects.forEach(obj => {
-            let mesh = optimizedMesh(file, obj);
-            group.add(mesh);
-        });
-
-        const box3 = new Box3().setFromObject(group);
-        const vector = new Vector3();
-        box3.getCenter(vector);
-
-        group.children.forEach(child => {
-            child.position.x -= vector.x;
-            child.position.y -= vector.y;
-            child.position.z -= vector.z;
-        })
-
-        return [group];
+        const scene = new VOXScene(file);
+        scene.init();
+        return scene;
     }
 }

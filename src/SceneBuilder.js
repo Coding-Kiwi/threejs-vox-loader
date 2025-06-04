@@ -1,5 +1,5 @@
-import { BufferGeometry, Float32BufferAttribute, Group, MeshStandardMaterial, PointLight } from "three";
-import VOXMesh from "./VOXMesh";
+import { BufferGeometry, Float32BufferAttribute, MeshStandardMaterial, PointLight } from "three";
+import VOXSceneObject from "./VOXSceneObject.js";
 
 function optimizeGrid(grid, w, h) {
     let rectangles = [];
@@ -113,9 +113,8 @@ function optimizeGrid(grid, w, h) {
     });
 }
 
-export function optimizedMesh(file, obj) {
+export function buildSceneObject(file, obj) {
     obj.flipToThree();
-
 
     const sizeX = obj.size.x;
     const sizeY = obj.size.y;
@@ -300,8 +299,6 @@ export function optimizedMesh(file, obj) {
         })
     })
 
-
-    const group = new Group();
     const geometry = new BufferGeometry();
 
     const positions = [];
@@ -359,26 +356,7 @@ export function optimizedMesh(file, obj) {
     geometry.computeVertexNormals();
     geometry.center();
 
-    let mesh = new VOXMesh(geometry, materials, lights);
-    group.add(mesh);
-
-    for (const l in lights) {
-        const light = lights[l];
-        light.position.x -= sizeX * 0.5;
-        light.position.y -= sizeX * 0.5;
-        light.position.z -= sizeX * 0.5;
-        group.add(light);
-    }
-
-    group.position.set(
-        obj.position.y,
-        obj.position.z,
-        obj.position.x
-    );
-
-    if (obj.rotation) {
-        group.setRotationFromMatrix(obj.rotation);
-    }
-
-    return group;
+    let sceneObj = new VOXSceneObject(obj);
+    sceneObj.init(geometry, materials, Object.values(lights));
+    return sceneObj;
 }
