@@ -27,6 +27,9 @@ steps:
   environment:
     NPM_TOKEN:
       from_secret: npm_token
+  depends_on:
+  - test
+  - lint
   commands:
   - npm whoami
   - npm publish
