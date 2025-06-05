@@ -30,6 +30,6 @@ steps:
   commands:
   - npm whoami
   - npm publish
-  #when:
-  #  event:
-  #  - tag
+  when:
+    event:
+    - tag

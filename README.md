@@ -16,6 +16,8 @@ A [Three.js](https://threejs.org/) loader for `.vox` files (from MagicaVoxel), d
 
 ## Installation
 
+npm [threejs-vox-loader](https://www.npmjs.com/package/threejs-vox-loader)
+
 ```bash
 npm install threejs-vox-loader
 ```
