@@ -3,8 +3,9 @@ node_modules
 tests
 docs
 
-.eslint.config.js
-jest.config.js
+.drone.yml
+eslint.config.js
+jest.config.mjs
 vite.config.js
 .gitignore
 .npmignore
