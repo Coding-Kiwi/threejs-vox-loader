@@ -23,14 +23,13 @@ steps:
   - npm run lint
 
 - name: npm
-  image: plugins/npm
-  settings:
-    username:
-      from_secret: npm_username
-    password:
-      from_secret: npm_password
-    email:
-      from_secret: npm_email
+  image: node
+  environment:
+    NPM_TOKEN:
+      from_secret: npm_token
+  commands:
+  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+  - npm publish
   #when:
   #  event:
   #  - tag
