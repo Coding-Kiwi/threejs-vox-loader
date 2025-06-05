@@ -22,15 +22,15 @@ steps:
   commands:
   - npm run lint
 
-#- name: npm
-#  image: plugins/npm
-#  settings:
-#    username:
-#      from_secret: npm_username
-#    password:
-#      from_secret: npm_password
-#    email:
-#      from_secret: npm_email
-#  when:
-#    event:
-#    - tag
+- name: npm
+  image: plugins/npm
+  settings:
+    username:
+      from_secret: npm_username
+    password:
+      from_secret: npm_password
+    email:
+      from_secret: npm_email
+  #when:
+  #  event:
+  #  - tag

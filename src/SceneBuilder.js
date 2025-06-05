@@ -1,4 +1,4 @@
-import { BufferGeometry, Color, Float32BufferAttribute, MeshStandardMaterial, PointLight, RectAreaLight, Vector3 } from "three";
+import { BufferGeometry, Float32BufferAttribute, MeshStandardMaterial, PointLight, RectAreaLight, Vector3 } from "three";
 import VOXSceneObject from "./VOXSceneObject.js";
 
 function optimizeGrid(grid, w, h) {
