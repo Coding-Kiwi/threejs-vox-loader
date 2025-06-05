@@ -2,6 +2,7 @@ examples
 node_modules
 tests
 docs
+.github
 
 .drone.yml
 eslint.config.js
