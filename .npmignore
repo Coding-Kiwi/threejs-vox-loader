@@ -3,7 +3,7 @@ node_modules
 tests
 docs
 .github
-
+.npmrc
 .drone.yml
 eslint.config.js
 jest.config.mjs
