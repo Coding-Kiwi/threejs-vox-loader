@@ -26,22 +26,19 @@ document.body.appendChild(renderer.domElement);
 const axesHelper = new THREE.AxesHelper(32);
 scene.add(axesHelper);
 
-const d = 50;
+const d = 40;
 const camera = new THREE.OrthographicCamera(window.innerWidth / -d, window.innerWidth / d, window.innerHeight / d, window.innerHeight / -d, 1, 1000);
-const radius = 100;
-const isoAngle = THREE.MathUtils.degToRad(35.264);
-let angle = THREE.MathUtils.degToRad(135);
-camera.position.set(
-    radius * Math.cos(angle),
-    radius * Math.sin(isoAngle),
-    radius * Math.sin(angle)
-);
 
-camera.lookAt(0, 0, 0);
+camera.position.set(-20, 20, -20);
+camera.lookAt(8, -8, 8);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const loader = new VOXLoader();
+const loader = new VOXLoader({
+    enableMetalness: false,
+    enableRoughness: false,
+    lightIntensity: 20
+});
 let currentVoxScene = null;
 
 function modelChange() {
@@ -61,18 +58,25 @@ function modelChange() {
 document.getElementById("modelSelect").addEventListener("change", modelChange)
 modelChange();
 
-const hemiLight = new THREE.HemisphereLight(0xcccccc, 0x444444, 3);
+
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
 scene.add(hemiLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
-dirLight.position.set(1.5, 3, 2.5);
-dirLight.castShadow = true; // default false
+const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+dirLight.position.set(-20, 0, 0);
+dirLight.castShadow = true;
 scene.add(dirLight);
 
-const dirLight2 = new THREE.DirectionalLight(0xffffff, 1.5);
-dirLight2.position.set(- 1.5, - 3, - 2.5);
-dirLight2.castShadow = true; // default false
-scene.add(dirLight2);
+const dirLigh2 = new THREE.DirectionalLight(0xffffff, 2);
+dirLigh2.position.set(0, 20, 0);
+dirLigh2.castShadow = true;
+scene.add(dirLigh2);
+
+const dirLight3 = new THREE.PointLight(0xffffff, 1, 0, 0.5);
+dirLight3.position.set(-20, 20, 0);
+dirLight3.castShadow = true;
+scene.add(dirLight3);
+
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {

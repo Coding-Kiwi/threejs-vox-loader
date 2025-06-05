@@ -31,9 +31,24 @@ function unpackRotation(byte) {
 }
 
 export default class VOXLoader extends Loader {
-    constructor(manager) {
+    constructor(opts = {}, manager) {
         super(manager);
         this.loader = new FileLoader(manager);
+
+        this.options = Object.assign({
+            defaultMaterialOptions: {
+                flatShading: true,
+                roughness: 0,
+                metalness: 0
+            },
+            enableMetalness: true,
+            enableRoughness: true,
+            enableGlass: true,
+            enableEmissive: true,
+            lightIntensity: 10,
+            lightDistance: 3,
+            lightDecay: 2,
+        }, opts);
     }
 
     load(url, onLoad, onProgress, onError) {
@@ -115,7 +130,7 @@ export default class VOXLoader extends Loader {
         // === build the scene ===
 
         const scene = new VOXScene(file);
-        scene.init();
+        scene.init(this.options);
         return scene;
     }
 }

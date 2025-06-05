@@ -8,9 +8,9 @@ export default class VOXScene extends Group {
         this.voxfile = voxfile;
     }
 
-    init() {
+    init(options) {
         this.voxfile.objects.forEach(obj => {
-            let sceneObject = buildSceneObject(this.voxfile, obj);
+            let sceneObject = buildSceneObject(this.voxfile, obj, options);
             this.add(sceneObject);
         });
 

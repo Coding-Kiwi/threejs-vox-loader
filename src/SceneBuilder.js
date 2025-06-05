@@ -1,4 +1,4 @@
-import { BufferGeometry, Float32BufferAttribute, MeshStandardMaterial, PointLight } from "three";
+import { BufferGeometry, Color, Float32BufferAttribute, MeshStandardMaterial, PointLight } from "three";
 import VOXSceneObject from "./VOXSceneObject.js";
 
 function optimizeGrid(grid, w, h) {
@@ -113,7 +113,7 @@ function optimizeGrid(grid, w, h) {
     });
 }
 
-export function buildSceneObject(file, obj) {
+export function buildSceneObject(file, obj, options) {
     obj.flipToThree();
 
     const sizeX = obj.size.x;
@@ -286,7 +286,7 @@ export function buildSceneObject(file, obj) {
 
                     const color = file.getThreeColor(r.color);
 
-                    let light = new PointLight(color, 10);
+                    let light = new PointLight(color, options.lightIntensity, options.lightDistance, options.lightDecay);
                     light.position.set(
                         voxel_coord.x + 0.5,
                         voxel_coord.y + 0.5,
@@ -321,24 +321,24 @@ export function buildSceneObject(file, obj) {
         const color = file.getThreeColor(color_index);
 
         const opts = {
-            flatShading: true
+            ...options.defaultMaterialOptions
         };
 
-        if (mat._type === '_emit') {
-            opts.emissive = color;
-            opts.emissiveIntensity = 0.5;
-        }
+        if (typeof mat._type !== 'undefined') {
+            if (options.enableEmissive && mat._type === '_emit') {
+                opts.emissive = color;
+                opts.emissiveIntensity = 0.5;
+            }
 
-        if (mat._type === '_metal' || mat._type === '_glass') {
-            if (typeof mat._metal !== "undefined") {
+            if (options.enableMetalness && typeof mat._metal !== "undefined") {
                 opts.metalness = parseFloat(mat._metal);
             }
 
-            if (typeof mat._rough !== "undefined") {
+            if (options.enableRoughness && typeof mat._rough !== "undefined") {
                 opts.roughness = parseFloat(mat._rough);
             }
 
-            if (typeof mat._alpha !== "undefined") {
+            if (options.enableGlass && typeof mat._alpha !== "undefined") {
                 opts.transparent = true;
                 opts.opacity = mat._alpha;
             }

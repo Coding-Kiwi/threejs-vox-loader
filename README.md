@@ -30,3 +30,38 @@ loader.load('path/to/model.vox', function (voxScene) {
     scene.add(voxScene);
 });
 ```
+
+## Options
+
+Be aware that the material properties like roughness or metalness of MagicaVoxel behave differently in three.js
+
+```javascript
+new VOXLoader({
+    defaultMaterialOptions: {
+        flatShading: true,
+        roughness: 0,
+        metalness: 0
+    },
+    enableMetalness: true,
+    enableRoughness: true,
+    enableGlass: true,
+    enableEmissive: true,
+    lightIntensity: 10,
+    lightDistance: 3,
+    lightDecay: 2,
+});
+```
+
+| Property                             | Type    | Default Value                                       | Description                                                     |
+|--------------------------------------|---------|-----------------------------------------------------|-----------------------------------------------------------------|
+| `defaultMaterialOptions`             | Object  | `{ flatShading: true, roughness: 0, metalness: 0 }` | Default material settings for rendering.                        |
+| `defaultMaterialOptions.flatShading` | Boolean | `true`                                              | Enables flat shading.                                           |
+| `defaultMaterialOptions.roughness`   | Number  | `0`                                                 | Sets the surface roughness (0 = smooth, 1 = rough).             |
+| `defaultMaterialOptions.metalness`   | Number  | `0`                                                 | Sets the surface metalness (0 = non-metal, 1 = fully metallic). |
+| `enableMetalness`                    | Boolean | `true`                                              | Allows control over metalness property in materials.            |
+| `enableRoughness`                    | Boolean | `true`                                              | Allows control over roughness property in materials.            |
+| `enableGlass`                        | Boolean | `true`                                              | Enables glass-like material effects.                            |
+| `enableEmissive`                     | Boolean | `true`                                              | Enables emissive (self-illuminating) material properties.       |
+| `lightIntensity`                     | Number  | `10`                                                | Intensity of the scene's light source.                          |
+| `lightDistance`                      | Number  | `3`                                                 | Distance at which the light has effect.                         |
+| `lightDecay`                         | Number  | `2`                                                 | Light decay rate over distance.                                 |
