@@ -49,6 +49,7 @@ new VOXLoader({
     lightIntensity: 10,
     lightDistance: 3,
     lightDecay: 2,
+    useRectLights: false
 });
 ```
 
@@ -65,3 +66,4 @@ new VOXLoader({
 | `lightIntensity`                     | Number  | `10`                                                | Intensity of the scene's light source.                          |
 | `lightDistance`                      | Number  | `3`                                                 | Distance at which the light has effect.                         |
 | `lightDecay`                         | Number  | `2`                                                 | Light decay rate over distance.                                 |
+| `useRectLights`                      | Boolean | `false`                                             | Use RectLights, see three.js docs                               |

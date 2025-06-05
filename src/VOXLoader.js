@@ -48,6 +48,7 @@ export default class VOXLoader extends Loader {
             lightIntensity: 10,
             lightDistance: 3,
             lightDecay: 2,
+            useRectLights: false
         }, opts);
     }
 

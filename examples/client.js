@@ -16,11 +16,15 @@ const MODELS = {
 }
 
 const scene = new THREE.Scene();
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 
 const axesHelper = new THREE.AxesHelper(32);
@@ -87,7 +91,6 @@ function onWindowResize() {
 }
 
 function animate() {
-    requestAnimationFrame(animate);
     controls.update();
     render()
 }
@@ -95,5 +98,3 @@ function animate() {
 function render() {
     renderer.render(scene, camera)
 }
-
-animate()

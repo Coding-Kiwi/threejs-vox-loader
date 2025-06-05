@@ -1,4 +1,4 @@
-import { BufferGeometry, Color, Float32BufferAttribute, MeshStandardMaterial, PointLight } from "three";
+import { BufferGeometry, Color, Float32BufferAttribute, MeshStandardMaterial, PointLight, RectAreaLight, Vector3 } from "three";
 import VOXSceneObject from "./VOXSceneObject.js";
 
 function optimizeGrid(grid, w, h) {
@@ -273,8 +273,9 @@ export function buildSceneObject(file, obj, options) {
             rectangles.forEach(r => {
                 if (!positionsByColor[r.color]) positionsByColor[r.color] = [];
 
-                //add positive x face
-                positionsByColor[r.color].push(...dir.getFace(parseInt(slice_index), r));
+                let face = dir.getFace(parseInt(slice_index), r);
+
+                positionsByColor[r.color].push(...face);
 
                 let voxel_coord = {};
                 voxel_coord[dir.axis] = parseInt(slice_index);
@@ -286,14 +287,35 @@ export function buildSceneObject(file, obj, options) {
 
                     const color = file.getThreeColor(r.color);
 
-                    let light = new PointLight(color, options.lightIntensity, options.lightDistance, options.lightDecay);
-                    light.position.set(
-                        voxel_coord.x + 0.5,
-                        voxel_coord.y + 0.5,
-                        voxel_coord.z + 0.5,
-                    );
+                    if (options.useRectLights) {
+                        //calculate the center of the face
+                        let center = new Vector3(0, 0, 0);
+                        for (let v = 0; v < face.length; v += 3) {
+                            center.add(new Vector3(face[v + 0], face[v + 1], face[v + 2]));
+                        }
+                        center.divideScalar(face.length / 3);
 
-                    lights[voxel_coord.x + "," + voxel_coord.y + "," + voxel_coord.z] = light;
+                        //offset by a tiny amount to prevent zfighting
+                        center.add(new Vector3(dir.offset.x * 0.001, dir.offset.y * 0.001, dir.offset.z * 0.001));
+
+                        let rectlight = new RectAreaLight(color, options.lightIntensity, r.end_a - r.a, r.end_b - r.b);
+                        rectlight.position.set(center.x, center.y, center.z);
+                        rectlight.lookAt(
+                            rectlight.position.x + dir.offset.x,
+                            rectlight.position.y + dir.offset.y,
+                            rectlight.position.z + dir.offset.z
+                        );
+
+                        lights[center.x + "," + center.y + "," + center.z] = rectlight;
+                    } else {
+                        let light = new PointLight(color, options.lightIntensity, options.lightDistance, options.lightDecay);
+                        light.position.set(
+                            voxel_coord.x + 0.5,
+                            voxel_coord.y + 0.5,
+                            voxel_coord.z + 0.5,
+                        );
+                        lights[voxel_coord.x + "," + voxel_coord.y + "," + voxel_coord.z] = light;
+                    }
                 }
             });
         })
