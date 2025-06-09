@@ -58,8 +58,6 @@ function modelChange() {
         currentVoxScene.castShadow = true;
         currentVoxScene.receiveShadow = true;
 
-        voxScene.position.x = 20
-
         scene.add(currentVoxScene);
     });
 }
