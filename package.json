@@ -1,6 +1,6 @@
 {
   "name": "threejs-vox-loader",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Improved three.js loader for MagicaVoxel .vox files",
   "main": "src/index.js",
   "type": "module",
