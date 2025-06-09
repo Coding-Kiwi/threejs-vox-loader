@@ -14,16 +14,15 @@ export default class VOXSceneObject extends Group {
 
         for (const l in this.lights) {
             const light = this.lights[l];
-            light.position.x -= this.obj.size.x * 0.5;
-            light.position.y -= this.obj.size.y * 0.5;
-            light.position.z -= this.obj.size.z * 0.5;
             this.add(light);
         }
 
+        //set the position of the object in the scene
+        //the anchor of each object is in its center, so translate by half the size
         this.position.set(
-            this.obj.position.y,
-            this.obj.position.z,
-            this.obj.position.x
+            this.obj.position.y - this.obj.size.y * 0.5,
+            this.obj.position.z - this.obj.size.z * 0.5,
+            this.obj.position.x - this.obj.size.x * 0.5
         );
 
         if (this.obj.rotation) {

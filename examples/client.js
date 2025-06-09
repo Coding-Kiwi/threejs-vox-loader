@@ -3,6 +3,7 @@ import { VOXLoader } from '../src/index.js';
 
 
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import boxesUrl from "../tests/fixtures/boxes.vox";
 import carsUrl from "../tests/fixtures/cars.vox";
 import cubeUrl from "../tests/fixtures/cube.vox";
 import serverUrl from "../tests/fixtures/server.vox";
@@ -13,6 +14,7 @@ const MODELS = {
     cube: cubeUrl,
     cars: carsUrl,
     twocubes: twocubesUrl,
+    boxes: boxesUrl,
 }
 
 const scene = new THREE.Scene();
@@ -51,9 +53,12 @@ function modelChange() {
     loader.load(url, function (voxScene) {
         if (currentVoxScene) scene.remove(currentVoxScene);
 
+        voxScene.center();
         currentVoxScene = voxScene;
         currentVoxScene.castShadow = true;
         currentVoxScene.receiveShadow = true;
+
+        voxScene.position.x = 20
 
         scene.add(currentVoxScene);
     });

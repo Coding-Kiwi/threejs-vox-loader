@@ -376,7 +376,6 @@ export function buildSceneObject(file, obj, options) {
 
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
     geometry.computeVertexNormals();
-    geometry.center();
 
     let sceneObj = new VOXSceneObject(obj);
     sceneObj.init(geometry, materials, Object.values(lights));

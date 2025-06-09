@@ -13,7 +13,9 @@ export default class VOXScene extends Group {
             let sceneObject = buildSceneObject(this.voxfile, obj, options);
             this.add(sceneObject);
         });
+    }
 
+    center() {
         const box3 = new Box3().setFromObject(this);
         const vector = new Vector3();
         box3.getCenter(vector);

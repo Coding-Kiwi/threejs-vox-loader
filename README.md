@@ -9,10 +9,29 @@ A [Three.js](https://threejs.org/) loader for `.vox` files (from MagicaVoxel), d
 * 🔧 **Optimized Meshes** – Builds efficient geometry for faster rendering and lower memory usage.
 * 🌐 **PBR Materials** – Automatically applies `roughness` and `metalness` values from the `.vox` file for realistic surfaces.
 * 💡 **Emissive Voxels with Lighting** – Converts emissive voxels into real-time `PointLight`s for dynamic scene illumination.
-* 🎯 **Accurate Orientation** – Ensures models are correctly aligned in the Three.js coordinate system.
+* 🎯 **Accurate Orientation and Positioning** – Ensures models are correctly aligned in the Three.js coordinate system.
 * 🧩 **Easy Integration** – Minimal setup required; simply load and add to your Three.js scene.
 * 🏗️ **Multi-Object Scene Support** – Fully supports MagicaVoxel scenes composed of multiple models.
 * 🧊 **Glass & Transparency Support** – Handles transparent voxels with proper material rendering.
+
+### Positioning
+
+The objects of a MagicaVoxel scene are anchored around their center and have a position in the scene relativ to the origin.
+The loader outputs a VoxScene object which is a three.js Group anchored around the origin in the MagicaVoxel scene.
+
+![Positioning](docs/positioning.png)
+
+By default a newly created MagicaVoxel project is a 40 x 40 x 40 cube with the position x 0 y 0 z 20 which means the cube is placed "ontop" of the origin (the center of the bottom face is at the origin, it is the anchor of the object).
+
+If you want the scene to be anchored at its center, call `voxScene.center()`
+
+### Coordinate-System
+
+MagicaVoxel and Three.js use different coordinate-systems:
+
+![Coordinates](docs/coordinates.png)
+
+The loader automatically converts to the threejs coordinate system.
 
 ## Installation
 
